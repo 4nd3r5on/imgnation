@@ -1,0 +1,91 @@
+==================================
+/uploads/checkhash
+
+==================================
+/images
+
+> # GET --------------------------
+[REQUEST]
+
+[REPONSE]
+Content-Type: application/json
+
+> # POST /uploads ----------------
+[REQUEST]
+Content-Type: multipart/form-data
+
+First data part should be named "metadata" and contain JSON of format:
+
+```json
+{"metadata": [
+    {
+      "tags": [<string>],
+      "access": {
+        "level": <0 -- anyone, 1 -- authorized, 2 -- private>,
+        "allowed_user_emails": [<string>]
+      },
+      "description": <string>
+    }
+]}
+```
+
+Next parts should be files (with provided filename and content type)
+Number of files should correspond to the provided metadata items count
+
+Metadata should correspond file parts order
+
+[REPONSE]
+Content-Type: application/json
+```json
+{
+  "results": [
+    "successful": <bool>
+    "upload_id":  <?string>
+    "filename":   <?string>
+    "error":      <?string>
+  ]
+}
+```
+
+==================================
+/images/data/{id}
+
+> # GET --------------------------
+[REPONSE]
+Content-Type: application/json
+
+```json
+{
+  // In later updates
+  // "your_file": true/false
+  // "your_tags": [<string>],
+
+  "tags": [<string>],
+  "file_size_bytes": <number>
+  "variants": [{
+    "name": <string>,
+    "content_type": <string>
+  }],
+  "uploads": [
+    {
+      "user_id": <uuid_string>,
+      "created_at": <time>
+    }
+  ]
+}
+```
+
+==================================
+/images/{id}
+
+> # GET --------------------------
+[REQUEST]
+Possible query arguments:
+  - Variant string
+  - GetData boolean
+
+[REPONSE]
+Just replies with a stored picture (if u are allowed to see it)
+
+> # DELETE  ----------------------
+

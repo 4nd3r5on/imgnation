@@ -1,0 +1,81 @@
+services:
+  mongodb:
+    image: mongo
+    container_name: imgnation_mongodb
+    restart: on-failure
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-imgnation}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-imgnation}
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - imgnation_net
+
+  minio:
+    image: minio/minio:latest
+    container_name: imgnation_minio
+    restart: on-failure
+    ports:
+      - "127.0.0.1:9000:9000" # S3 API
+      - "127.0.0.1:9001:9001" # Web UI
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-imgnation}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server --console-address ":9001" /data
+    networks:
+      - imgnation_net
+
+  app:
+    build:
+      context: ./imgnation-backend
+      dockerfile: dev.Dockerfile
+    environment:
+      AUTH_JWT_ACCESS_SECRET: ${AUTH_JWT_ACCESS_SECRET:-secret}
+      AUTH_JWT_REFRESH_SECRET: ${AUTH_JWT_REFRESH_SECRET:-alsosecret}
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+      MONGO_USER: ${MONGO_INITDB_ROOT_USERNAME:-imgnation}
+      MONGO_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_DB: ${MONGO_INITDB_DATABASE:-imgnation}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_USE_SSL: false
+      MINIO_CREDENTIALS_FILE_PATH: "./credentials.json"
+      APP_ENV: development
+    volumes:
+      - ./imgnation-backend:/app
+      - ./imgnation-backend/config.yml:/app/config.yml
+    ports:
+      - 8080:80
+    networks:
+      - imgnation_net
+    depends_on:
+      - mongodb
+      - minio
+
+  ui:
+    build:
+      context: ./imgnation-frontend
+      dockerfile: dev.Dockerfile
+    environment:
+      API_URL: ${VITE_API_URL:-http://127.0.0.1:8080}
+    ports:
+      - 3000:3000
+    networks:
+      - imgnation_net
+    depends_on:
+      - app
+
+
+networks:
+  imgnation_net:
+    driver: bridge
+
+
+volumes:
+  mongodb_data:
+  minio_data:

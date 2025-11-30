@@ -1,0 +1,32 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -buildvcs=false -o ./tmp/server ./cmd/server/"
+  bin = "./tmp/server"
+  full_bin = "./tmp/server"
+  include_ext = ["go", "tpl", "tmpl", "html", "yaml", "yml"]
+  exclude_dir = ["tmp", "vendor"]
+  exclude_file = []
+  exclude_regex = ["_test.go"]
+  follow_symlink = true
+  delay = 1000 # ms
+  max_errors = 5
+  log = "air_errors.log"
+
+[run]
+  extra_args = []
+  color = true
+  desc = false
+
+[misc]
+  clean_on_exit = true
+
+[log]
+  time = true
+
+[send_interrupt]
+  key = "ctrl + c"
+
+[screen]
+  clear_on_rebuild = true
